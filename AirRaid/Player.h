@@ -1,3 +1,5 @@
+#pragma once
+
 class PlayerClass {
   public:
   uint16_t x;
@@ -20,7 +22,6 @@ class BulletClass{
 
 
 void BulletClass::Update(){
-  if (!Active){return;}
   y+=1;
 }
 
@@ -40,6 +41,8 @@ void PlayerClass::PlayerMovement() {
     
   if (ard.justPressed(B_BUTTON)||ard.justPressed(DOWN_BUTTON)){
       if (Bullet.Active == false) {
+        sound.noTone();
+        sound.tone(NOTE_C5,50,NOTE_C4,50,NOTE_C3,50);
         Bullet.x = x;
         Bullet.y = y;
         Bullet.Active = true;

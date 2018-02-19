@@ -5,6 +5,7 @@ void GameInit(){
   for(int i=0; i<MAXBUILDINGS; ++i){
     Buildings[i].Height = random(0,4);
     Buildings[i].Type = random(0,3);
+    Buildings[i].Hit = false;
   }
   Points = 0;
   PlayerObj.x = 0;
@@ -26,11 +27,17 @@ void DrawBuildings(){
           Tile = 2;
       } else {
         if (Buildings[i].Type % 2 == 0)
-          Tile = 0;
+          if (Buildings[i].Hit)
+            Tile = 8;
+          else
+            Tile = 0;
         else
-          Tile = 3;
+          if (Buildings[i].Hit)
+            Tile = 7;
+          else
+            Tile = 3;
       }
-      sprites.drawSelfMasked(i*8,55-((j+1)*8),Tiles,Tile); 
+      sprites.drawOverwrite(i*8,55-((j+1)*8),Tiles,Tile); 
     }
   }
 }
@@ -54,8 +61,11 @@ void BulletUpdate(){
     uint8_t bombheight = (7 - Bullet.y);
     if (Local >= bombheight){
       if (Local>0){
+        if (Buildings[Bullet.x].Hit == false) Buildings[Bullet.x].Hit = true;
         Buildings[Bullet.x].Height--;
         Points++;
+        sound.noTone();
+        sound.tone(NOTE_E3,50,NOTE_C4,50,NOTE_G5,50);
         sprites.drawSelfMasked(Bullet.x * 8,Bullet.y * 8,Tiles,6);
         }
       Bullet.Active = false; 
@@ -85,6 +95,8 @@ void PlayerCheck(){
 void NewLevel(){
   DrawBuildings();
   DrawPlayer();
+  if (!sound.playing()) 
+    sound.tones(Win);
   ard.setCursor(CENTERX-27,CENTERY-3);
   ard.print(F("WELL DONE"));
   if(ard.everyXFrames(5)) PlayerObj.Frame = !PlayerObj.Frame;
@@ -92,6 +104,7 @@ void NewLevel(){
     for(int i=0; i<MAXBUILDINGS; ++i){
       Buildings[i].Height = random(0,4);
       Buildings[i].Type = random(0,3);
+      Buildings[i].Hit = false;
     }
     PlayerObj.x = 0;
     PlayerObj.y = 0;
@@ -113,13 +126,25 @@ void Death(){
 }
 
 void UpdateMainMenu(){
+  if (!sound.playing())
+    sound.tones(Title);
   sprites.drawSelfMasked(0,0,Logo,0);
+  if (ard.justPressed(A_BUTTON)){
+    Audio = !Audio;
+    sound.noTone();
+    sound.tone(NOTE_C4,100);
+    if (Audio){ard.audio.on();}else{ard.audio.off();}
+  }
   if (ard.justPressed(B_BUTTON)||ard.justPressed(DOWN_BUTTON)){
+    sound.noTone();
     gameState = GameState::GameStart;
   }  
 }
 
 void UpdateGame(){
+  if (!sound.playing()) {
+  sound.tone(NOTE_C2,10,NOTE_REST,10);
+  }
   PlayerObj.PlayerMovement();
   PlayerCheck();
   BulletUpdate();
